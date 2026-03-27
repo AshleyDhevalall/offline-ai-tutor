@@ -8,13 +8,23 @@ const status = document.getElementById("status");
 
 status.innerText = "Ready";
 
+// Check for WebGPU support
+if (!navigator.gpu) {
+  status.innerText = "WebGPU not supported. Please use a compatible browser (Chrome/Edge on desktop).";
+}
+
 async function initModel() {
   if (engine) return;
   status.innerText = "Downloading AI model (first time only)...";
 
-  engine = await webllm.CreateMLCEngine("Llama-3.2-1B-Instruct-q4f16_1-MLC");
-
-  status.innerText = "Model ready (offline capable)";
+  try {
+    engine = await webllm.CreateMLCEngine("Llama-3.2-1B-Instruct-q4f16_1-MLC");
+    status.innerText = "Model ready (offline capable)";
+  } catch (error) {
+    console.error("Failed to load model:", error);
+    status.innerText = "Error loading model. Please check browser compatibility.";
+    throw error;
+  }
 }
 
 document.getElementById("sendBtn").onclick = async () => {
@@ -27,28 +37,34 @@ document.getElementById("sendBtn").onclick = async () => {
   const typingDiv = appendMessage("ai", "Typing...");
   typingDiv.classList.add("typing");
 
-  await initModel();
+  try {
+    await initModel();
 
-  typingDiv.classList.remove("typing");
-  typingDiv.innerText = "";
+    typingDiv.classList.remove("typing");
+    typingDiv.innerText = "";
 
-  let fullText = "";
+    let fullText = "";
 
-  const completion = await engine.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content: "You are a tutor. Guide step-by-step. Never give final answers."
-      },
-      { role: "user", content: text }
-    ],
-    stream: true
-  });
+    const completion = await engine.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a tutor. Guide step-by-step. Never give final answers."
+        },
+        { role: "user", content: text }
+      ],
+      stream: true
+    });
 
-  for await (const chunk of completion) {
-    const token = chunk.choices[0]?.delta?.content || "";
-    fullText += token;
-    typingDiv.innerText = fullText;
+    for await (const chunk of completion) {
+      const token = chunk.choices[0]?.delta?.content || "";
+      fullText += token;
+      typingDiv.innerText = fullText;
+    }
+  } catch (error) {
+    console.error("Error during chat:", error);
+    typingDiv.classList.remove("typing");
+    typingDiv.innerText = "Sorry, an error occurred. Please try again.";
   }
 };
 
@@ -69,8 +85,9 @@ if ('serviceWorker' in navigator) {
 
 input.focus();
 
-input.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" || e.keyCode === 13) {
+    e.preventDefault();
     document.getElementById("sendBtn").click();
   }
 });
