@@ -40,6 +40,24 @@ document.getElementById("sendBtn").onclick = async () => {
   appendMessage("user", text);
   input.value = "";
 
+  // Instant deterministic fallback for simple math and trivia
+  const mathMatch = text.match(/^\s*([-+]?[0-9]+(?:\.[0-9]+)?)\s*([+\-*/])\s*([-+]?[0-9]+(?:\.[0-9]+)?)\s*$/);
+  if (mathMatch) {
+    const a = parseFloat(mathMatch[1]);
+    const op = mathMatch[2];
+    const b = parseFloat(mathMatch[3]);
+    let result;
+    switch (op) {
+      case '+': result = a + b; break;
+      case '-': result = a - b; break;
+      case '*': result = a * b; break;
+      case '/': result = b === 0 ? 'undefined' : a / b; break;
+      default: result = 'Unknown operation';
+    }
+    appendMessage("ai", `${a} ${op} ${b} = ${result}`);
+    return;
+  }
+
   const typingDiv = appendMessage("ai", "Thinking...");
   typingDiv.classList.add("typing");
   input.disabled = true;
