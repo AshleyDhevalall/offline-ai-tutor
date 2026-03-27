@@ -134,11 +134,22 @@ function setAppViewportHeight() {
 
 setAppViewportHeight();
 
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', setAppViewportHeight);
-} else {
-  window.addEventListener('resize', setAppViewportHeight);
-}
+const viewportChangeTarget = window.visualViewport || window;
+viewportChangeTarget.addEventListener('resize', setAppViewportHeight);
+
+window.addEventListener('orientationchange', setAppViewportHeight);
+
+window.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    input.blur();
+  } else {
+    setTimeout(() => {
+      setAppViewportHeight();
+      input.blur();
+      input.focus();
+    }, 100);
+  }
+});
 
 input.focus();
 
