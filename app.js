@@ -146,12 +146,12 @@ window.addEventListener('visibilitychange', () => {
     setTimeout(() => {
       setAppViewportHeight();
       input.blur();
-      input.focus();
+      // Do not auto-focus on return, user must tap to show keyboard.
     }, 100);
   }
 });
 
-input.focus();
+// Do not auto-focus on load to prevent keyboard jump on mobile.
 
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" || e.keyCode === 13) {
