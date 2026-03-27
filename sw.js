@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "ai-tutor-github-v1";
+const CACHE_NAME = "ai-tutor-github-v2";
 const ASSETS = [
   "index.html",
   "app.js",
