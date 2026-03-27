@@ -58,19 +58,39 @@ document.getElementById("sendBtn").onclick = async () => {
     // Remove the prompt from the output
     generatedText = generatedText.replace(prompt, "").trim();
     
-    // Remove common repetitions
-    generatedText = generatedText.replace(/\n{2,}/g, "\n"); // Remove multiple newlines
-    generatedText = generatedText.split("\n")[0]; // Take only first line/paragraph
+    // Remove repeated phrases/sentences
+    const words = generatedText.split(/\s+/);
+    const uniqueWords = [];
+    const seenPhrases = new Set();
     
-    // If text is too long, truncate at sentence boundary
-    if (generatedText.length > 300) {
-      const sentences = generatedText.match(/[^.!?]+[.!?]+/g) || [generatedText];
-      generatedText = sentences.slice(0, 2).join(" ").trim();
+    for (let i = 0; i < words.length; i++) {
+      // Get 3-word phrases to detect repetition
+      const phrase = words.slice(Math.max(0, i - 2), i + 1).join(" ").toLowerCase();
+      
+      if (!seenPhrases.has(phrase)) {
+        uniqueWords.push(words[i]);
+        seenPhrases.add(phrase);
+      }
+    }
+    
+    generatedText = uniqueWords.join(" ").trim();
+    
+    // Remove multiple newlines and extra spaces
+    generatedText = generatedText.replace(/\n{2,}/g, " ");
+    generatedText = generatedText.replace(/\s{2,}/g, " ");
+    
+    // Take only first 1-2 sentences
+    const sentences = generatedText.match(/[^.!?]+[.!?]+/g) || [generatedText];
+    generatedText = sentences.slice(0, 2).join(" ").trim();
+    
+    // Limit length
+    if (generatedText.length > 250) {
+      generatedText = generatedText.substring(0, 250).trim() + "...";
     }
     
     // Clean up common artifacts
-    if (!generatedText) {
-      generatedText = "I'm thinking about that. Could you be more specific?";
+    if (!generatedText || generatedText.length < 5) {
+      generatedText = "Think about what you just learned. What questions do you have?";
     }
     
     // Simulate streaming by displaying character by character
