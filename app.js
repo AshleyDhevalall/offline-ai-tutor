@@ -6,6 +6,8 @@ const chat = document.getElementById("chat");
 const input = document.getElementById("userInput");
 const status = document.getElementById("status");
 
+status.innerText = "Ready";
+
 async function initModel() {
   if (engine) return;
   status.innerText = "Downloading AI model (first time only)...";
@@ -16,17 +18,19 @@ async function initModel() {
 }
 
 document.getElementById("sendBtn").onclick = async () => {
-  const text = input.value;
+  const text = input.value.trim();
   if (!text) return;
 
   appendMessage("user", text);
   input.value = "";
 
-  //const typingDiv = appendMessage("ai", "Typing...");
-  //typingDiv.classList.Add("typing");
-  const aiDiv = appendMessage("ai", "...");
+  const typingDiv = appendMessage("ai", "Typing...");
+  typingDiv.classList.add("typing");
 
   await initModel();
+
+  typingDiv.classList.remove("typing");
+  typingDiv.innerText = "";
 
   let fullText = "";
 
@@ -44,7 +48,7 @@ document.getElementById("sendBtn").onclick = async () => {
   for await (const chunk of completion) {
     const token = chunk.choices[0]?.delta?.content || "";
     fullText += token;
-    aiDiv.innerText = fullText;
+    typingDiv.innerText = fullText;
   }
 };
 
@@ -62,3 +66,11 @@ function appendMessage(role, text) {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
+
+input.focus();
+
+input.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("sendBtn").click();
+  }
+});
