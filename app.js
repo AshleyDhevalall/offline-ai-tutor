@@ -22,6 +22,8 @@ document.getElementById("sendBtn").onclick = async () => {
   appendMessage("user", text);
   input.value = "";
 
+  //const typingDiv = appendMessage("ai", "Typing...");
+  //typingDiv.classList.Add("typing");
   const aiDiv = appendMessage("ai", "...");
 
   await initModel();
