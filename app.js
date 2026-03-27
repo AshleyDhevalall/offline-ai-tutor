@@ -8,11 +8,6 @@ const status = document.getElementById("status");
 
 status.innerText = "Ready";
 
-// Check browser compatibility
-if (!window.SharedArrayBuffer) {
-  status.innerText = "Your browser doesn't support required features. Please use a modern browser (iOS Safari, Chrome, Firefox, Edge).";
-}
-
 async function initModel() {
   if (generator) return;
   status.innerText = "Downloading AI model (first time only)... This may take a moment.";
