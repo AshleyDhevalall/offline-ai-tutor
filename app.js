@@ -13,7 +13,8 @@ async function initModel() {
   status.innerText = "Downloading AI model (first time only)... This may take a moment.";
 
   try {
-    generator = await pipeline('text-generation', 'Xenova/distilgpt2');
+    // Use a larger model with better generation quality for instruction-like responses
+    generator = await pipeline('text-generation', 'Xenova/bloom-1b1');
     status.innerText = "Model ready (offline capable)";
   } catch (error) {
     console.error("Failed to load model:", error);
@@ -39,17 +40,18 @@ document.getElementById("sendBtn").onclick = async () => {
     typingDiv.classList.remove("typing");
     typingDiv.innerText = "";
 
-    // Simple prompt - avoid repetition
-    const prompt = `Q: ${text}\nA:`;
+    // Explicit instruction prompt for tutor behavior
+    const prompt = `You are an expert tutor. Provide a short, clear answer in 1-2 sentences and do not repeat yourself.\nQuestion: ${text}\nAnswer:`;
 
     let fullText = "";
 
     // Generate response
     const output = await generator(prompt, {
-      max_new_tokens: 80,
-      temperature: 0.7,
-      top_p: 0.9,
-      do_sample: true
+      max_new_tokens: 70,
+      temperature: 0.65,
+      top_p: 0.85,
+      do_sample: true,
+      repetition_penalty: 1.2
     });
 
     // Extract generated text and clean it up
