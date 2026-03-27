@@ -13,9 +13,9 @@ async function initModel() {
   status.innerText = "Downloading AI model (first time only)... This may take a moment.";
 
   const models = [
+    'Xenova/mistral-small',
     'Xenova/stablelm-tiny',
-    'Xenova/stablelm-base',
-    'Xenova/distilgpt2',
+    'Xenova/stablelm-base',   
     'Xenova/gpt2'
   ];
 
