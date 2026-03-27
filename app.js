@@ -14,6 +14,7 @@ async function initModel() {
 
   const models = [
     'Xenova/stablelm-tiny',
+    'Xenova/stablelm-base',
     'Xenova/distilgpt2',
     'Xenova/gpt2'
   ];
