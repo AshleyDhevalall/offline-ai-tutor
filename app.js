@@ -13,11 +13,29 @@ async function initModel() {
   status.innerText = "Downloading AI model (first time only)... This may take a moment.";
 
   try {
-    // Use a larger model with better generation quality for instruction-like responses
+    // Start with smaller model for compatibility on mobile/iOS.
+    generator = await pipeline('text-generation', 'Xenova/distilgpt2');
+    status.innerText = "Model ready (offline capable)";
+    return;
+  } catch (error) {
+    console.warn("distilgpt2 failed; trying gpt2 as fallback", error);
+  }
+
+  try {
+    generator = await pipeline('text-generation', 'Xenova/gpt2');
+    status.innerText = "Model ready (offline capable)";
+    return;
+  } catch (error) {
+    console.warn("gpt2 failed; trying bloom-1b1 as fallback", error);
+  }
+
+  try {
+    // last fallback, may be too heavy on mobile
     generator = await pipeline('text-generation', 'Xenova/bloom-1b1');
     status.innerText = "Model ready (offline capable)";
+    return;
   } catch (error) {
-    console.error("Failed to load model:", error);
+    console.error("Failed to load any model:", error);
     status.innerText = "Error loading model. Please try again or refresh the page.";
     throw error;
   }
