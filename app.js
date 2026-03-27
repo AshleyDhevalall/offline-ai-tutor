@@ -50,8 +50,10 @@ function appendMessage(role, text) {
   const div = document.createElement("div");
   div.className = `message ${role}`;
   div.innerText = text;
+
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
+
   return div;
 }
 
