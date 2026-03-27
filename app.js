@@ -1,28 +1,28 @@
 
-import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers';
 
-let engine;
+let generator;
 const chat = document.getElementById("chat");
 const input = document.getElementById("userInput");
 const status = document.getElementById("status");
 
 status.innerText = "Ready";
 
-// Check for WebGPU support
-if (!navigator.gpu) {
-  status.innerText = "WebGPU not supported. Please use a compatible browser (Chrome/Edge on desktop).";
+// Check browser compatibility
+if (!window.SharedArrayBuffer) {
+  status.innerText = "Your browser doesn't support required features. Please use a modern browser (iOS Safari, Chrome, Firefox, Edge).";
 }
 
 async function initModel() {
-  if (engine) return;
-  status.innerText = "Downloading AI model (first time only)...";
+  if (generator) return;
+  status.innerText = "Downloading AI model (first time only)... This may take a moment.";
 
   try {
-    engine = await webllm.CreateMLCEngine("Llama-3.2-1B-Instruct-q4f16_1-MLC");
+    generator = await pipeline('text-generation', 'Xenova/distilgpt2');
     status.innerText = "Model ready (offline capable)";
   } catch (error) {
     console.error("Failed to load model:", error);
-    status.innerText = "Error loading model. Please check browser compatibility.";
+    status.innerText = "Error loading model. Please try again or refresh the page.";
     throw error;
   }
 }
@@ -34,8 +34,9 @@ document.getElementById("sendBtn").onclick = async () => {
   appendMessage("user", text);
   input.value = "";
 
-  const typingDiv = appendMessage("ai", "Typing...");
+  const typingDiv = appendMessage("ai", "Thinking...");
   typingDiv.classList.add("typing");
+  input.disabled = true;
 
   try {
     await initModel();
@@ -43,28 +44,36 @@ document.getElementById("sendBtn").onclick = async () => {
     typingDiv.classList.remove("typing");
     typingDiv.innerText = "";
 
+    // Prepare the prompt for the AI
+    const systemPrompt = "You are a helpful tutor. Provide clear, step-by-step guidance without giving away the final answer. Keep responses concise (2-3 sentences).";
+    const prompt = `${systemPrompt}\n\nStudent: ${text}\nTutor: `;
+
     let fullText = "";
 
-    const completion = await engine.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: "You are a tutor. Guide step-by-step. Never give final answers."
-        },
-        { role: "user", content: text }
-      ],
-      stream: true
+    // Generate response
+    const output = await generator(prompt, {
+      max_new_tokens: 100,
+      temperature: 0.7,
+      top_p: 0.9
     });
 
-    for await (const chunk of completion) {
-      const token = chunk.choices[0]?.delta?.content || "";
-      fullText += token;
+    // Extract generated text
+    const generatedText = output[0].generated_text.replace(prompt, "").trim();
+    
+    // Simulate streaming by displaying character by character
+    for (let i = 0; i < generatedText.length; i++) {
+      fullText += generatedText[i];
       typingDiv.innerText = fullText;
+      // Small delay for smooth typing effect
+      await new Promise(resolve => setTimeout(resolve, 20));
     }
   } catch (error) {
     console.error("Error during chat:", error);
     typingDiv.classList.remove("typing");
     typingDiv.innerText = "Sorry, an error occurred. Please try again.";
+  } finally {
+    input.disabled = false;
+    input.focus();
   }
 };
 
