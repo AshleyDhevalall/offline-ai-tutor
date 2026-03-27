@@ -3,12 +3,28 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   background: #0b0b0c;
   color: #fff;
+  min-height: 100vh;
 }
 
 .app {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
+  max-height: 100vh;
   height: 100vh;
+}
+
+/* iOS safe area support */
+.app {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* allow default mobile browser the full height minus address bar */
+@supports (height: 100dvh) {
+  .app {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
 }
 
 .header {
