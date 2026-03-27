@@ -39,21 +39,39 @@ document.getElementById("sendBtn").onclick = async () => {
     typingDiv.classList.remove("typing");
     typingDiv.innerText = "";
 
-    // Prepare the prompt for the AI
-    const systemPrompt = "You are a helpful tutor. Provide clear, step-by-step guidance without giving away the final answer. Keep responses concise (2-3 sentences).";
-    const prompt = `${systemPrompt}\n\nStudent: ${text}\nTutor: `;
+    // Simple prompt - avoid repetition
+    const prompt = `Q: ${text}\nA:`;
 
     let fullText = "";
 
     // Generate response
     const output = await generator(prompt, {
-      max_new_tokens: 100,
+      max_new_tokens: 80,
       temperature: 0.7,
-      top_p: 0.9
+      top_p: 0.9,
+      do_sample: true
     });
 
-    // Extract generated text
-    const generatedText = output[0].generated_text.replace(prompt, "").trim();
+    // Extract generated text and clean it up
+    let generatedText = output[0].generated_text;
+    
+    // Remove the prompt from the output
+    generatedText = generatedText.replace(prompt, "").trim();
+    
+    // Remove common repetitions
+    generatedText = generatedText.replace(/\n{2,}/g, "\n"); // Remove multiple newlines
+    generatedText = generatedText.split("\n")[0]; // Take only first line/paragraph
+    
+    // If text is too long, truncate at sentence boundary
+    if (generatedText.length > 300) {
+      const sentences = generatedText.match(/[^.!?]+[.!?]+/g) || [generatedText];
+      generatedText = sentences.slice(0, 2).join(" ").trim();
+    }
+    
+    // Clean up common artifacts
+    if (!generatedText) {
+      generatedText = "I'm thinking about that. Could you be more specific?";
+    }
     
     // Simulate streaming by displaying character by character
     for (let i = 0; i < generatedText.length; i++) {
