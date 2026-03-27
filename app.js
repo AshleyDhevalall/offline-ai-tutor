@@ -12,33 +12,24 @@ async function initModel() {
   if (generator) return;
   status.innerText = "Downloading AI model (first time only)... This may take a moment.";
 
-  try {
-    // Start with smaller model for compatibility on mobile/iOS.
-    generator = await pipeline('text-generation', 'Xenova/distilgpt2');
-    status.innerText = "Model ready (offline capable)";
-    return;
-  } catch (error) {
-    console.warn("distilgpt2 failed; trying gpt2 as fallback", error);
+  const models = [
+    'Xenova/stablelm-tiny',
+    'Xenova/distilgpt2',
+    'Xenova/gpt2'
+  ];
+
+  for (const model of models) {
+    try {
+      generator = await pipeline('text-generation', model);
+      status.innerText = `Model ready (offline capable) - ${model}`;
+      return;
+    } catch (error) {
+      console.warn(`Model ${model} failed, trying next...`, error);
+    }
   }
 
-  try {
-    generator = await pipeline('text-generation', 'Xenova/gpt2');
-    status.innerText = "Model ready (offline capable)";
-    return;
-  } catch (error) {
-    console.warn("gpt2 failed; trying bloom-1b1 as fallback", error);
-  }
-
-  try {
-    // last fallback, may be too heavy on mobile
-    generator = await pipeline('text-generation', 'Xenova/bloom-1b1');
-    status.innerText = "Model ready (offline capable)";
-    return;
-  } catch (error) {
-    console.error("Failed to load any model:", error);
-    status.innerText = "Error loading model. Please try again or refresh the page.";
-    throw error;
-  }
+  status.innerText = "All model loads failed. Please refresh and try again.";
+  throw new Error('No available model loaded');
 }
 
 document.getElementById("sendBtn").onclick = async () => {
@@ -58,59 +49,45 @@ document.getElementById("sendBtn").onclick = async () => {
     typingDiv.classList.remove("typing");
     typingDiv.innerText = "";
 
-    // Explicit instruction prompt for tutor behavior
-    const prompt = `You are an expert tutor. Provide a short, clear answer in 1-2 sentences and do not repeat yourself.\nQuestion: ${text}\nAnswer:`;
+    // Strong instruction prompt with few-shot examples
+    const prompt = `You are an expert AI math/personal tutor. Answer questions clearly in 1-2 sentences without unrelated text.\n\nExample:\nQ: What is 2+2?\nA: 2+2 equals 4.\n\nQ: ${text}\nA:`;
 
     let fullText = "";
 
     // Generate response
     const output = await generator(prompt, {
       max_new_tokens: 70,
-      temperature: 0.65,
-      top_p: 0.85,
+      temperature: 0.2,
+      top_p: 0.9,
+      repetition_penalty: 1.05,
       do_sample: true,
-      repetition_penalty: 1.2
+      stop: ['\nQ', 'Q:']
     });
 
-    // Extract generated text and clean it up
-    let generatedText = output[0].generated_text;
-    
-    // Remove the prompt from the output
+    // Extract generated text and clean up
+    let generatedText = output[0].generated_text || '';
     generatedText = generatedText.replace(prompt, "").trim();
-    
-    // Remove repeated phrases/sentences
-    const words = generatedText.split(/\s+/);
-    const uniqueWords = [];
-    const seenPhrases = new Set();
-    
-    for (let i = 0; i < words.length; i++) {
-      // Get 3-word phrases to detect repetition
-      const phrase = words.slice(Math.max(0, i - 2), i + 1).join(" ").toLowerCase();
-      
-      if (!seenPhrases.has(phrase)) {
-        uniqueWords.push(words[i]);
-        seenPhrases.add(phrase);
-      }
+
+    // Remove multiple newlines and repeated whitespace
+    generatedText = generatedText.replace(/\n{2,}/g, " ").replace(/\s{2,}/g, " ").trim();
+
+    // Avoid accidental echo of question text
+    if (generatedText.toLowerCase().startsWith(text.toLowerCase())) {
+      generatedText = generatedText.substring(text.length).trim();
     }
-    
-    generatedText = uniqueWords.join(" ").trim();
-    
-    // Remove multiple newlines and extra spaces
-    generatedText = generatedText.replace(/\n{2,}/g, " ");
-    generatedText = generatedText.replace(/\s{2,}/g, " ");
-    
-    // Take only first 1-2 sentences
+
+    // Keep first 1-2 sentences
     const sentences = generatedText.match(/[^.!?]+[.!?]+/g) || [generatedText];
     generatedText = sentences.slice(0, 2).join(" ").trim();
-    
-    // Limit length
-    if (generatedText.length > 250) {
-      generatedText = generatedText.substring(0, 250).trim() + "...";
+
+    // Enforce minimum and max lengths
+    if (generatedText.length > 240) {
+      generatedText = generatedText.substring(0, 240).trim();
+      if (!/[.!?]$/.test(generatedText)) generatedText += '.';
     }
-    
-    // Clean up common artifacts
+
     if (!generatedText || generatedText.length < 5) {
-      generatedText = "Think about what you just learned. What questions do you have?";
+      generatedText = "Sorry, I didn't understand. Could you rephrase your question?";
     }
     
     // Simulate streaming by displaying character by character
