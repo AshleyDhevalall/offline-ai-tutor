@@ -1,0 +1,48 @@
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #111;
+  color: #fff;
+}
+
+.app {
+  max-width: 600px;
+  margin: auto;
+  padding: 1rem;
+}
+
+#chat {
+  height: 60vh;
+  overflow-y: auto;
+  border: 1px solid #333;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+.message {
+  margin: 5px 0;
+}
+
+.user {
+  text-align: right;
+  color: #4fc3f7;
+}
+
+.ai {
+  text-align: left;
+  color: #81c784;
+}
+
+.input-bar {
+  display: flex;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+}
+
+button {
+  padding: 10px;
+}
