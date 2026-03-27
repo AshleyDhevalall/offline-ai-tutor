@@ -1,7 +1,6 @@
 
 const CACHE_NAME = "ai-tutor-github-v1";
 const ASSETS = [
-  "/",
   "index.html",
   "app.js",
   "styles.css"
