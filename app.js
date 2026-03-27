@@ -127,6 +127,19 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
 
+function setAppViewportHeight() {
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+
+setAppViewportHeight();
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', setAppViewportHeight);
+} else {
+  window.addEventListener('resize', setAppViewportHeight);
+}
+
 input.focus();
 
 input.addEventListener("keydown", (e) => {

@@ -23,9 +23,12 @@ body {
   height: 100dvh;
 }
 
+.app {
+  height: calc(var(--vh, 1vh) * 100);
+}
+
 @supports (height: 100dvh) {
   .app {
-    min-height: 100dvh;
     height: 100dvh;
   }
 }
