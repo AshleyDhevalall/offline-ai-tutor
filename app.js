@@ -10,7 +10,7 @@ async function initModel() {
   if (engine) return;
   status.innerText = "Downloading AI model (first time only)...";
 
-  engine = await webllm.CreateMLCEngine("Qwen2-0.5B-Instruct-q4f16_1-MLC");
+  engine = await webllm.CreateMLCEngine("Llama-3.2-1B-Instruct-q4f16_1-MLC");
 
   status.innerText = "Model ready (offline capable)";
 }
